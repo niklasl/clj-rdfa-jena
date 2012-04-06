@@ -1,6 +1,6 @@
 (ns rdfa.adapter.jena
   (:import [rdfa.core IRI Literal BNode])
-  (:require [rdfa.stddom :as impl]))
+  (:require [rdfa.parser]))
 
 
 (defn create-node [model term]
@@ -17,6 +17,21 @@
     BNode (.createResource model
                            (com.hp.hpl.jena.rdf.model.AnonId. (:id term)))))
 
+(defn read-into-model [model source base]
+  (let [{:keys [env triples proc-triples]} (rdfa.parser/get-rdfa source base)]
+    (doseq [[s p o] triples]
+      (.add model
+            (create-node model s)
+            (.createProperty model (:id p))
+            (create-node model o)))))
+
+
+(defn expand-vocabulary [model]
+  ; TODO:
+  ; each vocab parse-into-vocab-model
+  ; expand
+  model)
+
 
 (gen-class
   :name rdfa.adapter.jena.RDFaReader
@@ -29,26 +44,15 @@
 (defn parser-setProperty [this pname value]
   nil)
 
-(defn parser-read-Model-InputStream-String
-  [this model in-stream base]
-  (throw (UnsupportedOperationException.)))
+(defn parser-read
+  ;parser-read-Model-InputStream-String
+  ;parser-read-Model-Reader-String
+  ([this model source base]
+   (read-into-model model source base))
+  ;parser-read-Model-String
+  ([this model url]
+   (read-into-model model url url)))
 
-(defn parser-read-Model-Reader-String
-  [this model reader base]
-  (throw (UnsupportedOperationException.)))
-
-(defn parser-read-Model-String
-  [this model url]
-  (let [{:keys [env triples proc-triples]} (impl/get-rdfa url)]
-    (doseq [[s p o] triples]
-      (.add model
-            (create-node model s)
-            (.createProperty model (:id p))
-            (create-node model o)))))
-
-
-(defn expand-vocabulary [model]
-  nil)
 
 (gen-class
   :name rdfa.adapter.jena.VocabExpander
