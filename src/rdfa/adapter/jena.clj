@@ -1,6 +1,9 @@
 (ns rdfa.adapter.jena
   (:import [rdfa.core IRI Literal BNode])
-  (:require [rdfa.parser]))
+  (:use [rdfa.core :only [rdfa:usesVocabulary]])
+  (:require [rdfa.parser])
+  (:import [com.hp.hpl.jena.rdf.model ModelFactory]
+           [com.hp.hpl.jena.reasoner ReasonerRegistry]))
 
 
 (defn create-node [model term]
@@ -28,11 +31,29 @@
             (create-node model o)))))
 
 
-(defn expand-vocabulary [model]
-  ; TODO:
-  ; each vocab parse-into-vocab-model
-  ; expand
-  model)
+(defn load-vocab [vocab-paths cache]
+  (let [voc-model (ModelFactory/createDefaultModel)]
+    (doseq [vocab-path vocab-paths]
+      ; TODO: open URLConnection, examine mime-type, parse stream, close
+      (if (.endsWith vocab-path "html")
+        (read-into-model voc-model vocab-path)
+        (.read voc-model vocab-path)))
+    voc-model))
+
+(defn find-vocab-paths [model]
+  (map #(.. % (asResource) (getURI))
+       (iterator-seq
+         (.listObjectsOfProperty model (create-node model rdfa:usesVocabulary)))))
+
+(defn expand-vocab [model & {:keys [cache]}]
+  (let [voc-model (load-vocab (find-vocab-paths model) cache)
+        reasoner (.bindSchema (ReasonerRegistry/getOWLMicroReasoner) voc-model)
+        inf-model (ModelFactory/createInfModel reasoner model)
+        ; TODO: find a lean solution to get only the inferred triples
+        inf-voc-model (ModelFactory/createInfModel reasoner (ModelFactory/createDefaultModel))
+        res-model (.difference inf-model inf-voc-model)]
+    (.setNsPrefixes res-model (.getNsPrefixMap model))
+    res-model))
 
 
 (gen-class
@@ -66,5 +87,5 @@
   :methods [[expand [com.hp.hpl.jena.rdf.model.Model] com.hp.hpl.jena.rdf.model.Model]])
 
 (defn expander-expand [this model]
-  (expand-vocabulary model))
+  (expand-vocab model))
 
