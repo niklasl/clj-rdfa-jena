@@ -20,24 +20,38 @@
     BNode (.createResource model
                            (com.hp.hpl.jena.rdf.model.AnonId. (:id term)))))
 
+(defn triples-into-model [triples model]
+  (doseq [[s p o] triples]
+    (.add model
+          (create-node model s)
+          (.createProperty model (:id p))
+          (create-node model o))))
+
 (defn read-into-model [model & args]
   (let [{:keys [env triples proc-triples]} (apply rdfa.parser/get-rdfa args)]
     (.setNsPrefixes model (:prefix-map env))
     ;(.setNsPrefix model (:vocab env))
-    (doseq [[s p o] triples]
-      (.add model
-            (create-node model s)
-            (.createProperty model (:id p))
-            (create-node model o)))))
+    (triples-into-model triples model)))
 
+(defn triples-to-model [triples]
+  (let [model (ModelFactory/createDefaultModel)]
+    (triples-into-model triples model)
+    model))
 
 (defn load-vocab [vocab-paths cache]
   (let [voc-model (ModelFactory/createDefaultModel)]
     (doseq [vocab-path vocab-paths]
-      ; TODO: open URLConnection, examine mime-type, parse stream, close
-      (if (.endsWith vocab-path "html")
-        (read-into-model voc-model vocab-path)
-        (.read voc-model vocab-path)))
+      ; TODO: send mime-type and encoding to rdfa.parser
+      (let [url (java.net.URL. vocab-path)
+            uc (.openConnection url)
+            content-encoding (.getContentEncoding uc)
+            content-type (.getContentType uc)]
+        (with-open [stream (.getInputStream uc)]
+          (if (or (.equals content-type "text/html")
+                  (.equals content-type "application/xhtml+xml")
+                  (.endsWith vocab-path "html"))
+            (read-into-model voc-model stream vocab-path)
+            (.read voc-model stream vocab-path)))))
     voc-model))
 
 (defn find-vocab-paths [model]
