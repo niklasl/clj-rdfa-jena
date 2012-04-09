@@ -43,7 +43,9 @@
     (doseq [vocab-path vocab-paths]
       ; TODO: send mime-type and encoding to rdfa.parser
       (let [url (java.net.URL. vocab-path)
-            uc (.openConnection url)
+            accept "application/rdf+xml,application/xhtml+xml,text/html,text/xml"
+            uc (doto (.openConnection url)
+                 (.setRequestProperty "accept" accept))
             content-encoding (.getContentEncoding uc)
             content-type (.getContentType uc)]
         (with-open [stream (.getInputStream uc)]
