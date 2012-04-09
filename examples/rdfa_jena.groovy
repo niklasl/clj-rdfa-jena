@@ -1,17 +1,27 @@
 //@GrapeResolver(name='clojars.org', root='http://clojars.org/repo')
 @Grab('rdfa:rdfa:0.5.0-SNAPSHOT')
 @Grab('rdfa:rdfa-jena:0.1.0-SNAPSHOT')
+import com.hp.hpl.jena.rdf.model.impl.RDFReaderFImpl
+import com.hp.hpl.jena.rdf.model.ModelFactory
 
-def path = args[0]
+RDFReaderFImpl.setBaseReaderClassName("RDFA", "rdfa.adapter.jena.RDFaReader")
 
-def model = com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel()
+def model = ModelFactory.createDefaultModel()
 
+def location = args[0]
+
+// Directly use reader:
 //def reader = new rdfa.adapter.jena.RDFaReader()
-//reader.read(model, path)
+//reader.read(model, location)
+// Or set reader name directly on model:
+//model.setReaderClassName("RDFA", "rdfa.adapter.jena.RDFaReader")
 
-model.setReaderClassName("RDFA", "rdfa.adapter.jena.RDFaReader")
-//model.read(path, "RDFA")
-new File(path).withInputStream { model.read(it, path, "RDFA") }
+// Parse from location:
+//model.read(location, "RDFA")
+// Parse from input stream:
+new URL(location).withInputStream {
+    model.read(it, location, "RDFA")
+}
 
 model.write(System.out, "N3")
 
