@@ -1,10 +1,10 @@
 (defproject
-  rdfa/rdfa-jena "0.1.0-SNAPSHOT"
+  rdfa/rdfa-jena "0.1.1-SNAPSHOT"
   :description "Jena adapter for the Clojure RDFa library"
-  url "https://github.com/niklasl/clj-rdfa-jena"
-  :dependencies [[org.clojure/clojure "1.3.0"]
-                 [rdfa/rdfa "0.5.0-SNAPSHOT"]
-                 [com.hp.hpl.jena/jena "2.6.4"]]
+  :url "https://github.com/niklasl/clj-rdfa-jena"
+  :dependencies [[org.clojure/clojure "1.4.0"]
+                 [rdfa/rdfa "0.5.1-SNAPSHOT"]
+                 [org.apache.jena/jena-core "2.7.3"]]
   :aot [rdfa.adapter.jena]
-  :ring {:handler rdfa.web/app}
-  :main rdfa.stddom)
+  :target-dir "target"
+  :jar-exclusions [#"(?:^|/)\..+"])

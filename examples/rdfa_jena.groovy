@@ -1,6 +1,6 @@
 //@GrapeResolver(name='clojars.org', root='http://clojars.org/repo')
-@Grab('rdfa:rdfa:0.5.0-SNAPSHOT')
-@Grab('rdfa:rdfa-jena:0.1.0-SNAPSHOT')
+@Grab('rdfa:rdfa:0.5.1-SNAPSHOT')
+@Grab('rdfa:rdfa-jena:0.1.1-SNAPSHOT')
 import com.hp.hpl.jena.rdf.model.impl.RDFReaderFImpl
 import com.hp.hpl.jena.rdf.model.ModelFactory
 
@@ -23,5 +23,6 @@ new URL(location).withInputStream {
     model.read(it, location, "RDFA")
 }
 
+//model = new rdfa.adapter.jena.VocabExpander().expand(model)
 model.write(System.out, "N3")
 
