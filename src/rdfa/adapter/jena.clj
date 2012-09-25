@@ -7,11 +7,11 @@
 
 
 (defn create-node [model term]
-  (condp = (type term)
+  (condp instance? term
     IRI (.createResource model (:id term))
     Literal (let [{value :value tag :tag} term]
               (cond
-                (= (type tag) IRI)
+                (instance? IRI tag)
                 (.createTypedLiteral model value (:id tag))
                 (not-empty tag)
                 (.createLiteral model value tag)
